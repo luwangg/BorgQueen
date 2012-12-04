@@ -2,6 +2,7 @@ var http = require('http');
 var fs = require('fs');
 var lockFile = require('lockfile');
 var io = require('socket.io');
+var io_client = require('socket.io-client');
 
 var borg_queen = http.createServer(function (req, res) {
   fs.readFile(__dirname + '/drone/fly.html',
@@ -16,37 +17,41 @@ var borg_queen = http.createServer(function (req, res) {
   });
 });
 
+var bqSocket = io.listen(borg_queen);
+borg_queen.listen(8081);
+
+var drone = io_client.connect('http://localhost:8080');
+
 var lock_file = 'drone.lock';
-var server_port = 8081;
 
-var borg_queen_socket = io.listen(borg_queen);
-borg_queen.listen(server_port);
+bqSocket.sockets.on('connection', function (socket) {
+  var has_lock = false;
 
-var drone_host = 'http://localhost:8080';
-var drone = io.connect(drone_host);
-
-
-borg_queen_socket.sockets.on('connection', function (socket) {
   socket.send('hello world');
-  // opts is optional, and defaults to {}
-  lockFile.lock(lock_file, opts, function (er, fd) {
+  lockFile.lock(lock_file, function (er, fd) {
     if (er)
       return;
+    has_lock = true;
 
     console.log("lock acquired");
     socket.send('lock acquired');
-
-    socket.on('fly', function (data) {
-      drone.emit('fly', data);
-    });
-
-    socket.on('disconnect', function (data) {
-      lockFile.unlock(lock_file, function (er) {
-        console.log("lock released");
-      });
-
-      socket.off('fly');
-    });
-
   });
+
+  socket.on('fly', function (data) {
+    if (!has_lock)
+      return;
+
+    console.log("data", data);
+    drone.emit('fly', data);
+  });
+
+  socket.on('disconnect', function (data) {
+    if (!has_lock)
+      return;
+    
+    lockFile.unlock(lock_file, function (er) {
+      console.log("lock released");
+    });
+  });
+
 });
