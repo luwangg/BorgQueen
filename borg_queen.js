@@ -3,18 +3,53 @@ var fs = require('fs');
 var lockFile = require('lockfile');
 var io = require('socket.io');
 var io_client = require('socket.io-client');
+var path = require('path');
 
 var borg_queen = http.createServer(function (req, res) {
-  fs.readFile(__dirname + '/drone/fly.html',
-  function (err, data) {
-    if (err) {
-      res.writeHead(500);
-      return res.end('Error loading fly.html');
+  var filePath = req.url;
+  console.log('filePath', filePath);
+  if (filePath.match(/^\/vendor/)) {
+    filePath = '.' + filePath;
+    var extname = path.extname(filePath);
+    var contentType = 'text/html';
+    switch (extname) {
+        case '.js':
+            contentType = 'text/javascript';
+            break;
+        case '.css':
+            contentType = 'text/css';
+            break;
     }
 
-    res.writeHead(200);
-    res.end(data);
-  });
+    fs.exists(filePath, function(exists) {
+      if (exists) {
+        fs.readFile(filePath, function(error, content) {
+          if (error) {
+            res.writeHead(500);
+            res.end();
+          } else {
+            res.writeHead(200, { 'Content-Type': contentType });
+            res.end(content, 'utf-8');
+          }
+        });
+      } else {
+        res.writeHead(404);
+        res.end();
+      }
+    });
+
+  } else {
+    fs.readFile(__dirname + '/drone/fly.html',
+    function (err, data) {
+      if (err) {
+        res.writeHead(500);
+        return res.end('Error loading fly.html');
+      }
+
+      res.writeHead(200);
+      res.end(data);
+    });
+  }
 });
 
 var bqSocket = io.listen(borg_queen);
@@ -48,7 +83,7 @@ bqSocket.sockets.on('connection', function (socket) {
   socket.on('disconnect', function (data) {
     if (!has_lock)
       return;
-    
+
     lockFile.unlock(lock_file, function (er) {
       console.log("lock released");
     });
