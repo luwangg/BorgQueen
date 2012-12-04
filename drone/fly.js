@@ -1,27 +1,18 @@
 var arDrone = require('ar-drone');
 var client  = arDrone.createClient();
 
-var app = require('http').createServer(handler)
-  , io = require('socket.io').listen(app)
-  , fs = require('fs')
+var app = require('http').createServer(handler),
+    io = require('socket.io').listen(app);
 
 app.listen(8080);
 
 function handler (req, res) {
-  fs.readFile(__dirname + '/fly.html',
-  function (err, data) {
-    if (err) {
-      res.writeHead(500);
-      return res.end('Error loading index.html');
-    }
-
-    res.writeHead(200);
-    res.end(data);
-  });
+  res.writeHead(200);
+  res.end("Nothing to show");
 }
 
 function now() {
-  return Date.now()
+  return Date.now();
 }
 
 io.sockets.on('connection', function (socket) {
@@ -45,7 +36,7 @@ io.sockets.on('connection', function (socket) {
 
 process.on('SIGINT', function() {
   console.log("\nGracefully shutting down from SIGINT (Ctrl+C)");
- 	client.stop();
- 	client.land();
- 	setInterval(function() { process.exit(); }, 800);
+  client.stop();
+  client.land();
+  setInterval(function() { process.exit(); }, 800);
 });
