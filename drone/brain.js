@@ -22,7 +22,7 @@ function land() {
 
 var state = {};
 var last_update = 0;
-var runnerId = 0;
+var runner = 0;
 
 io.sockets.on('connection', function (socket) {
   socket.on('fly', function (data) {
@@ -36,6 +36,11 @@ io.sockets.on('connection', function (socket) {
       startFlying();
     if (data.land)
       stopFlying();
+    if (data.recover) {
+      console.log("Recovering!")
+      stopFlying();
+      client.disableEmergency();
+    }
   });
 });
 
@@ -46,7 +51,6 @@ function startFlying() {
     if (now() - last_update > 250) {
       stopFlying();
     }
-    console.log(state);
     client.right(state.x || 0);
     client.front(state.y || 0);
     client.up(state.z || 0);
@@ -56,7 +60,8 @@ function startFlying() {
 
 function stopFlying() {
   console.log("Stopping drone");
-  clearInterval(runner);
+  if (runner != 0 && runner != undefined)
+    clearInterval(runner);
   state = {};
   land();
 }
