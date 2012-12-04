@@ -26,6 +26,7 @@ var runner = 0;
 
 io.sockets.on('connection', function (socket) {
   socket.on('fly', function (data) {
+    console.log('data', data);
     last_update = now();
     state.x = (data.x || 0);
     state.y = (data.y || 0);
@@ -60,8 +61,8 @@ function startFlying() {
 
 function stopFlying() {
   console.log("Stopping drone");
-  if (runner != 0 && runner != undefined)
-    clearInterval(runner);
+  
+  clearInterval(runner);
   state = {};
   land();
 }

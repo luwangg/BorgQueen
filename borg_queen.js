@@ -58,12 +58,14 @@ borg_queen.listen(8081);
 var drone = io_client.connect('http://localhost:8080');
 
 var lock_file = 'drone.lock';
+lockFile.unlock(lock_file, function() {});
 
 bqSocket.sockets.on('connection', function (socket) {
   var has_lock = false;
 
   socket.send('hello world');
   lockFile.lock(lock_file, function (er, fd) {
+    console.log("err", er);
     if (er)
       return;
     has_lock = true;
@@ -73,6 +75,7 @@ bqSocket.sockets.on('connection', function (socket) {
   });
 
   socket.on('fly', function (data) {
+    console.log("data", data, has_lock);
     if (!has_lock)
       return;
 
