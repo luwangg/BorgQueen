@@ -1,0 +1,77 @@
+<script src="/socket.io/socket.io.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.2/underscore-min.js"></script>
+<script src="http://cdn.craig.is/js/mousetrap/mousetrap.min.js?492b4"></script>
+
+<script>
+  var socket = io.connect('http://localhost');
+
+  var debug = false;
+
+
+  function takeoff() {
+  	socket.emit('fly', {takeoff:true});
+  }
+  function land() {
+  	socket.emit('fly', {land:true});
+  }
+  function fly(state) {
+  	socket.emit('fly', state);
+  }
+
+  if (debug)
+  	takeoff = land = fly = $.noop;
+
+  var do_fly = $.noop;
+
+	var x = 0,
+			y = 0,
+			z = 0,
+			r = 0;
+
+	var throttle = {};
+
+  Mousetrap.bind('w', function() { throttle.y = 0.5; });
+  Mousetrap.bind('w', function() { throttle.y = 0; }, 'keyup');
+  Mousetrap.bind('s', function() { throttle.y = -0.5; });
+  Mousetrap.bind('s', function() { throttle.y = 0; }, 'keyup');
+  Mousetrap.bind('a', function() { throttle.x = -0.5; });
+  Mousetrap.bind('a', function() { throttle.x = 0; }, 'keyup');
+  Mousetrap.bind('d', function() { throttle.x = 0.5; });
+  Mousetrap.bind('d', function() { throttle.x = 0; }, 'keyup');
+
+
+  Mousetrap.bind('up', function() { throttle.z = 0.25; });
+  Mousetrap.bind('up', function() { throttle.z = 0; }, 'keyup');
+  Mousetrap.bind('down', function() { throttle.z = -0.52; });
+  Mousetrap.bind('down', function() { throttle.z = 0; }, 'keyup');
+  Mousetrap.bind('left', function() { throttle.r = -0.5; });
+  Mousetrap.bind('left', function() { throttle.r = 0; }, 'keyup');
+  Mousetrap.bind('right', function() { throttle.r = 0.5; });
+  Mousetrap.bind('right', function() { throttle.r = 0; }, 'keyup');
+
+  Mousetrap.bind('t', function() {
+  	takeoff();
+  	do_fly = fly;
+  });
+
+  Mousetrap.bind('space', function() {
+  	do_fly = $.noop;
+  	land();
+  });
+
+  setInterval(function() {
+  	do_fly(throttle);
+  }, 100);
+
+  /*var old_delay = _.bind(_.delay, _);
+  _.delay = function(args) {
+  	old_delay(args);
+  	return _;
+  };*/
+
+ // takeoff();
+ // _.delay(fly, 5000, 0,0,0,0.5)
+ // _.delay(land, 10000);
+
+</script>
