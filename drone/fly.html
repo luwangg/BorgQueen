@@ -17,6 +17,9 @@
   function fly(state) {
   	socket.emit('fly', state);
   }
+  function recover() {
+    socket.emit('fly', {recover:true});
+  }
 
   if (debug)
   	takeoff = land = fly = $.noop;
@@ -44,14 +47,28 @@
   Mousetrap.bind('right', function() { throttle.r = 0.5; });
   Mousetrap.bind('right', function() { throttle.r = 0; }, 'keyup');
 
+
+  function start() {
+    takeoff();
+    do_fly = fly;  
+  }
+
+  function stop() {
+    do_fly = $.noop;
+    land();
+  }
+
   Mousetrap.bind('t', function() {
-  	takeoff();
-  	do_fly = fly;
+    start();
+  });
+
+  Mousetrap.bind('r', function() {
+    stop();
+    recover();
   });
 
   Mousetrap.bind('space', function() {
-  	do_fly = $.noop;
-  	land();
+    stop();
   });
 
   setInterval(function() {
