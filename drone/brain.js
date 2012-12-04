@@ -56,7 +56,7 @@ function startFlying() {
     client.front(state.y || 0);
     client.up(state.z || 0);
     client.clockwise(state.r || 0);
-  }, 50);
+  }, 30);
 }
 
 function stopFlying() {
